@@ -1,0 +1,103 @@
+package report
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"sort"
+	"strings"
+
+	"env-doctor/internal/audit"
+)
+
+const (
+	colorRed    = "\033[31m"
+	colorYellow = "\033[33m"
+	colorGreen  = "\033[32m"
+	colorBlue   = "\033[36m"
+	colorReset  = "\033[0m"
+)
+
+type Options struct {
+	JSON   bool
+	Strict bool
+}
+
+func Write(w io.Writer, result *audit.Result, opts Options) (int, error) {
+	if opts.JSON {
+		return jsonExitCode(result, opts.Strict), writeJSON(w, result)
+	}
+	return terminalExitCode(result, opts.Strict), writeTerminal(w, result)
+}
+
+func writeJSON(w io.Writer, result *audit.Result) error {
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(result)
+}
+
+func writeTerminal(w io.Writer, result *audit.Result) error {
+	if result.IssueCount == 0 {
+		_, err := fmt.Fprintf(w, "%s✅ No issues found%s\n", colorGreen, colorReset)
+		return err
+	}
+
+	writeCategory(w, colorRed, "❌ Missing vars", result.MissingVars)
+	writeCategory(w, colorYellow, "⚠️ Unused vars", result.UnusedVars)
+	writeCategory(w, colorRed, "❌ .env.example missing from .env", result.ExampleMissingFromEnv)
+	writeCategory(w, colorYellow, "⚠️ .env missing from .env.example", result.UndocumentedInExample)
+	writeCategory(w, colorYellow, "⚠️ Secret leak detection", result.GitignoreWarnings)
+
+	if len(result.DuplicateKeys) > 0 {
+		fmt.Fprintf(w, "%s❌ Duplicate keys%s\n", colorRed, colorReset)
+		paths := make([]string, 0, len(result.DuplicateKeys))
+		for path := range result.DuplicateKeys {
+			paths = append(paths, path)
+		}
+		sort.Strings(paths)
+		for _, path := range paths {
+			fmt.Fprintf(w, "  - %s: %s\n", path, strings.Join(result.DuplicateKeys[path], ", "))
+		}
+		fmt.Fprintln(w)
+	}
+
+	if len(result.FixesApplied) > 0 {
+		fmt.Fprintf(w, "%s%s%s\n", colorBlue, "Auto-fixes applied", colorReset)
+		for _, key := range result.FixesApplied {
+			fmt.Fprintf(w, "  - added %s= to %s\n", key, result.Example.Path)
+		}
+		fmt.Fprintln(w)
+	}
+
+	_, err := fmt.Fprintf(
+		w,
+		"Summary: %d issues (%d blocking, %d non-blocking)\n",
+		result.IssueCount,
+		result.BlockingIssueCount,
+		result.NonBlockingIssueCount,
+	)
+	return err
+}
+
+func writeCategory(w io.Writer, color, title string, items []string) {
+	if len(items) == 0 {
+		return
+	}
+
+	fmt.Fprintf(w, "%s%s%s\n", color, title, colorReset)
+	for _, item := range items {
+		fmt.Fprintf(w, "  - %s\n", item)
+	}
+	fmt.Fprintln(w)
+}
+
+func terminalExitCode(result *audit.Result, strict bool) int {
+	if strict && result.IssueCount > 0 {
+		return 1
+	}
+	return 0
+}
+
+func jsonExitCode(result *audit.Result, strict bool) int {
+	return terminalExitCode(result, strict)
+}
