@@ -1,10 +1,9 @@
 package main
 
 import (
+	"env-doctor/cmd"
 	"fmt"
 	"os"
-
-	"env-doctor/cmd"
 )
 
 func main() {
@@ -16,7 +15,6 @@ func main() {
 			}
 			os.Exit(exitErr.Code)
 		}
-
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

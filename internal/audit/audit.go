@@ -11,37 +11,19 @@ import (
 	"env-doctor/internal/scanner"
 )
 
-type Result struct {
-	Root                  string              `json:"root"`
-	Env                   parser.File         `json:"env"`
-	Example               parser.File         `json:"env_example"`
-	ScannedFiles          []string            `json:"scanned_files"`
-	Referenced            map[string][]string `json:"referenced"`
-	MissingVars           []string            `json:"missing_vars"`
-	UnusedVars            []string            `json:"unused_vars"`
-	ExampleMissingFromEnv []string            `json:"example_missing_from_env"`
-	UndocumentedInExample []string            `json:"undocumented_in_example"`
-	DuplicateKeys         map[string][]string `json:"duplicate_keys"`
-	GitignoreWarnings     []string            `json:"gitignore_warnings"`
-	FixesApplied          []string            `json:"fixes_applied"`
-	IssueCount            int                 `json:"issue_count"`
-	BlockingIssueCount    int                 `json:"blocking_issue_count"`
-	NonBlockingIssueCount int                 `json:"non_blocking_issue_count"`
-}
-
-func Run(root string) (*Result, error) {
+func Run(root string, opts Options) (*Result, error) {
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
 		return nil, fmt.Errorf("resolve path: %w", err)
 	}
 
-	envPath, examplePath := parser.EnvPaths(absRoot)
+	envPath, exampleEnvPath := parser.EnvPaths(absRoot, opts.EnvFile, opts.ExampleEnvFile)
 	envFile, err := parser.ParseEnvFile(envPath)
 	if err != nil {
 		return nil, err
 	}
 
-	exampleFile, err := parser.ParseEnvFile(examplePath)
+	exampleEnvFile, err := parser.ParseEnvFile(exampleEnvPath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,39 +34,39 @@ func Run(root string) (*Result, error) {
 	}
 
 	result := &Result{
-		Root:          absRoot,
-		Env:           envFile,
-		Example:       exampleFile,
-		ScannedFiles:  scanResult.Scanned,
-		Referenced:    scanResult.Referenced,
-		DuplicateKeys: map[string][]string{},
+		Root:           absRoot,
+		EnvFile:        envFile,
+		ExampleEnvFile: exampleEnvFile,
+		ScannedFiles:   scanResult.Scanned,
+		Referenced:     scanResult.Referenced,
+		DuplicateKeys:  map[string][]string{},
 	}
 
 	result.MissingVars = diffKeys(keysOf(scanResult.Referenced), envFile.Values)
 	result.UnusedVars = diffKeys(keysOf(envFile.Values), scanResult.Referenced)
-	result.ExampleMissingFromEnv = diffKeys(keysOf(exampleFile.Values), envFile.Values)
-	result.UndocumentedInExample = diffKeys(keysOf(envFile.Values), exampleFile.Values)
+	result.ExampleEnvMissingFromEnv = diffKeys(keysOf(exampleEnvFile.Values), envFile.Values)
+	result.UndocumentedInExampleEnv = diffKeys(keysOf(envFile.Values), exampleEnvFile.Values)
 
 	if len(envFile.Duplicates) > 0 {
 		result.DuplicateKeys[envFile.Path] = append([]string(nil), envFile.Duplicates...)
 	}
-	if len(exampleFile.Duplicates) > 0 {
-		result.DuplicateKeys[exampleFile.Path] = append([]string(nil), exampleFile.Duplicates...)
+	if len(exampleEnvFile.Duplicates) > 0 {
+		result.DuplicateKeys[exampleEnvFile.Path] = append([]string(nil), exampleEnvFile.Duplicates...)
 	}
 
 	if warning := gitignoreWarning(absRoot, envFile.Exists); warning != "" {
 		result.GitignoreWarnings = append(result.GitignoreWarnings, warning)
 	}
 
-	result.BlockingIssueCount = len(result.MissingVars) + len(result.ExampleMissingFromEnv) + duplicateCount(result.DuplicateKeys)
-	result.NonBlockingIssueCount = len(result.UnusedVars) + len(result.UndocumentedInExample) + len(result.GitignoreWarnings)
+	result.BlockingIssueCount = len(result.MissingVars) + len(result.ExampleEnvMissingFromEnv) + duplicateCount(result.DuplicateKeys)
+	result.NonBlockingIssueCount = len(result.UnusedVars) + len(result.UndocumentedInExampleEnv) + len(result.GitignoreWarnings)
 	result.IssueCount = result.BlockingIssueCount + result.NonBlockingIssueCount
 
 	return result, nil
 }
 
 func ApplyFixes(result *Result) error {
-	if len(result.UndocumentedInExample) == 0 {
+	if len(result.UndocumentedInExampleEnv) == 0 {
 		return nil
 	}
 
@@ -92,24 +74,24 @@ func ApplyFixes(result *Result) error {
 		return fmt.Errorf("ensure root exists: %w", err)
 	}
 
-	f, err := os.OpenFile(result.Example.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile(result.ExampleEnvFile.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
-		return fmt.Errorf("open %s for fix: %w", result.Example.Path, err)
+		return fmt.Errorf("open %s for fix: %w", result.ExampleEnvFile.Path, err)
 	}
 	defer f.Close()
 
 	info, err := f.Stat()
 	if err != nil {
-		return fmt.Errorf("stat %s: %w", result.Example.Path, err)
+		return fmt.Errorf("stat %s: %w", result.ExampleEnvFile.Path, err)
 	}
 
 	if info.Size() > 0 {
 		if _, err := f.WriteString("\n"); err != nil {
-			return fmt.Errorf("prepare %s: %w", result.Example.Path, err)
+			return fmt.Errorf("prepare %s: %w", result.ExampleEnvFile.Path, err)
 		}
 	}
 
-	for _, key := range result.UndocumentedInExample {
+	for _, key := range result.UndocumentedInExampleEnv {
 		line := fmt.Sprintf("%s=\n", key)
 		if _, err := f.WriteString(line); err != nil {
 			return fmt.Errorf("write fix for %s: %w", key, err)
@@ -117,14 +99,14 @@ func ApplyFixes(result *Result) error {
 		result.FixesApplied = append(result.FixesApplied, key)
 	}
 
-	updated, err := parser.ParseEnvFile(result.Example.Path)
+	updated, err := parser.ParseEnvFile(result.ExampleEnvFile.Path)
 	if err != nil {
 		return err
 	}
-	result.Example = updated
-	result.UndocumentedInExample = diffKeys(keysOf(result.Env.Values), updated.Values)
-	result.BlockingIssueCount = len(result.MissingVars) + len(result.ExampleMissingFromEnv) + duplicateCount(result.DuplicateKeys)
-	result.NonBlockingIssueCount = len(result.UnusedVars) + len(result.UndocumentedInExample) + len(result.GitignoreWarnings)
+	result.ExampleEnvFile = updated
+	result.UndocumentedInExampleEnv = diffKeys(keysOf(result.EnvFile.Values), updated.Values)
+	result.BlockingIssueCount = len(result.MissingVars) + len(result.ExampleEnvMissingFromEnv) + duplicateCount(result.DuplicateKeys)
+	result.NonBlockingIssueCount = len(result.UnusedVars) + len(result.UndocumentedInExampleEnv) + len(result.GitignoreWarnings)
 	result.IssueCount = result.BlockingIssueCount + result.NonBlockingIssueCount
 
 	return nil

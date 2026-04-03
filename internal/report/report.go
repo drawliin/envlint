@@ -18,16 +18,11 @@ const (
 	colorReset  = "\033[0m"
 )
 
-type Options struct {
-	JSON   bool
-	Strict bool
-}
-
 func Write(w io.Writer, result *audit.Result, opts Options) (int, error) {
 	if opts.JSON {
 		return jsonExitCode(result, opts.Strict), writeJSON(w, result)
 	}
-	return terminalExitCode(result, opts.Strict), writeTerminal(w, result)
+	return terminalExitCode(result, opts.Strict), writeTerminal(w, result, opts)
 }
 
 func writeJSON(w io.Writer, result *audit.Result) error {
@@ -36,7 +31,7 @@ func writeJSON(w io.Writer, result *audit.Result) error {
 	return encoder.Encode(result)
 }
 
-func writeTerminal(w io.Writer, result *audit.Result) error {
+func writeTerminal(w io.Writer, result *audit.Result, opts Options) error {
 	if result.IssueCount == 0 {
 		_, err := fmt.Fprintf(w, "%s✅ No issues found%s\n", colorGreen, colorReset)
 		return err
@@ -44,8 +39,8 @@ func writeTerminal(w io.Writer, result *audit.Result) error {
 
 	writeCategory(w, colorRed, "❌ Missing vars", result.MissingVars)
 	writeCategory(w, colorYellow, "⚠️ Unused vars", result.UnusedVars)
-	writeCategory(w, colorRed, "❌ .env.example missing from .env", result.ExampleMissingFromEnv)
-	writeCategory(w, colorYellow, "⚠️ .env missing from .env.example", result.UndocumentedInExample)
+	writeCategory(w, colorRed, fmt.Sprintf("❌ %s missing from %s", opts.ExampleEnvFile, opts.EnvFile), result.ExampleEnvMissingFromEnv)
+	writeCategory(w, colorYellow, fmt.Sprintf("⚠️ %s missing from %s", opts.EnvFile, opts.ExampleEnvFile), result.UndocumentedInExampleEnv)
 	writeCategory(w, colorYellow, "⚠️ Secret leak detection", result.GitignoreWarnings)
 
 	if len(result.DuplicateKeys) > 0 {
@@ -64,7 +59,7 @@ func writeTerminal(w io.Writer, result *audit.Result) error {
 	if len(result.FixesApplied) > 0 {
 		fmt.Fprintf(w, "%s%s%s\n", colorBlue, "Auto-fixes applied", colorReset)
 		for _, key := range result.FixesApplied {
-			fmt.Fprintf(w, "  - added %s= to %s\n", key, result.Example.Path)
+			fmt.Fprintf(w, "  - added %s= to %s\n", key, result.ExampleEnvFile.Path)
 		}
 		fmt.Fprintln(w)
 	}

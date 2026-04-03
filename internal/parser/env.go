@@ -14,14 +14,6 @@ import (
 
 var envLinePattern = regexp.MustCompile(`^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=`)
 
-type File struct {
-	Path       string            `json:"path"`
-	Exists     bool              `json:"exists"`
-	Values     map[string]string `json:"values"`
-	Duplicates []string          `json:"duplicates"`
-	Keys       []string          `json:"keys"`
-}
-
 func ParseEnvFile(path string) (File, error) {
 	file := File{
 		Path:   path,
@@ -87,6 +79,6 @@ func ParseEnvFile(path string) (File, error) {
 	return file, nil
 }
 
-func EnvPaths(root string) (string, string) {
-	return filepath.Join(root, ".env"), filepath.Join(root, ".env.example")
+func EnvPaths(root, envFile, exampleEnvFile string) (string, string) {
+	return filepath.Join(root, envFile), filepath.Join(root, exampleEnvFile)
 }

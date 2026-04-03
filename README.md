@@ -21,6 +21,8 @@ brew install env-doctor # placeholder
 ```bash
 env-doctor
 env-doctor --path ./app
+env-doctor --env .env.local
+env-doctor --example-env .env.example
 env-doctor --fix
 env-doctor --json
 env-doctor --strict

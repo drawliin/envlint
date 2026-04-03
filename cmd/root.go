@@ -10,18 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type options struct {
-	path   string
-	fix    bool
-	json   bool
-	strict bool
-}
-
-type ExitError struct {
-	Code    int
-	Message string
-}
-
 func (e ExitError) Error() string {
 	if e.Message == "" {
 		return fmt.Sprintf("exit status %d", e.Code)
@@ -30,13 +18,22 @@ func (e ExitError) Error() string {
 }
 
 var opts options
-
 var rootCmd = &cobra.Command{
 	Use:   "env-doctor",
 	Short: "Audit .env files against your codebase",
 	Long:  "env-doctor audits environment variable usage, documentation drift, duplicate keys, and basic secret hygiene.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		result, err := audit.Run(opts.path)
+		renderOpts := report.Options{
+			JSON:           opts.json,
+			Strict:         opts.strict,
+			EnvFile:        opts.envFile,
+			ExampleEnvFile: opts.exampleEnvFile,
+		}
+
+		result, err := audit.Run(opts.path, audit.Options{
+			EnvFile:        opts.envFile,
+			ExampleEnvFile: opts.exampleEnvFile,
+		})
 		if err != nil {
 			return err
 		}
@@ -45,11 +42,6 @@ var rootCmd = &cobra.Command{
 			if err := audit.ApplyFixes(result); err != nil {
 				return err
 			}
-		}
-
-		renderOpts := report.Options{
-			JSON:   opts.json,
-			Strict: opts.strict,
 		}
 
 		exitCode, outputErr := report.Write(os.Stdout, result, renderOpts)
@@ -77,6 +69,8 @@ func init() {
 	rootCmd.Flags().BoolVar(&opts.fix, "fix", false, "auto-add undocumented .env keys to .env.example with empty values")
 	rootCmd.Flags().BoolVar(&opts.json, "json", false, "render output as JSON")
 	rootCmd.Flags().BoolVar(&opts.strict, "strict", false, "exit with code 1 if any issues are found")
+	rootCmd.Flags().StringVar(&opts.envFile, "env", ".env", "env file name")
+	rootCmd.Flags().StringVar(&opts.exampleEnvFile, "example-env", ".env.example", "example env file name")
 }
 
 func Execute() error {

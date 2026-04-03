@@ -16,11 +16,6 @@ var supportedExtensions = map[string]bool{
 	".py": true,
 }
 
-type pattern struct {
-	expression *regexp.Regexp
-	group      int
-}
-
 var patterns = []pattern{
 	{expression: regexp.MustCompile(`os\.Getenv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
 	{expression: regexp.MustCompile(`os\.LookupEnv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
@@ -29,11 +24,6 @@ var patterns = []pattern{
 	{expression: regexp.MustCompile(`(?:os\.environ(?:\.get)?|environ\.get)\(\s*["']([A-Z0-9_]+)["']`), group: 1},
 	{expression: regexp.MustCompile(`os\.getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
 	{expression: regexp.MustCompile(`getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
-}
-
-type Result struct {
-	Referenced map[string][]string `json:"referenced"`
-	Scanned    []string            `json:"scanned_files"`
 }
 
 func Scan(root string) (Result, error) {
