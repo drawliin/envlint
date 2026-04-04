@@ -1,31 +1,31 @@
-# env-doctor
+# envlint
 
 [![CI](https://img.shields.io/badge/ci-pending-lightgrey)](#)
 [![Go Version](https://img.shields.io/badge/go-1.24+-blue)](#)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#)
 
-`env-doctor` is a lightweight Go CLI that audits `.env` files against your codebase. It helps you spot missing variables, unused values, `.env.example` drift, duplicate keys, and basic secret-leak risks before they turn into production surprises.
+`envlint` is a lightweight Go CLI that audits `.env` files against your codebase. It helps you spot missing variables, unused values, `.env.example` drift, duplicate keys, and basic secret-leak risks before they turn into production surprises.
 
 ## Install
 
 ```bash
-go install env-doctor@latest
+go install github.com/drawliin/envlint@latest
 ```
 
 ```bash
-brew install env-doctor # placeholder
+brew install envlint # placeholder
 ```
 
 ## Usage
 
 ```bash
-env-doctor
-env-doctor --path ./app
-env-doctor --env .env.local
-env-doctor --example-env .env.example
-env-doctor --fix
-env-doctor --json
-env-doctor --strict
+envlint
+envlint --path ./app
+envlint --env .env.local
+envlint --example-env .env.example
+envlint --fix
+envlint --json
+envlint --strict
 ```
 
 ### Sample output

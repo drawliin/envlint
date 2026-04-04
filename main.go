@@ -1,9 +1,10 @@
 package main
 
 import (
-	"env-doctor/cmd"
 	"fmt"
 	"os"
+
+	"github.com/drawliin/envlint/cmd"
 )
 
 func main() {

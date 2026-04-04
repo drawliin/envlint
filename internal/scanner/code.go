@@ -9,13 +9,6 @@ import (
 	"strings"
 )
 
-var supportedExtensions = map[string]bool{
-	".go": true,
-	".js": true,
-	".ts": true,
-	".py": true,
-}
-
 var patterns = []pattern{
 	{expression: regexp.MustCompile(`os\.Getenv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
 	{expression: regexp.MustCompile(`os\.LookupEnv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
@@ -38,8 +31,7 @@ func Scan(root string) (Result, error) {
 
 		name := d.Name()
 		if d.IsDir() {
-			switch name {
-			case ".git", "node_modules", "vendor", ".idea", ".vscode":
+			if excludedDirectories[name] {
 				return filepath.SkipDir
 			}
 			return nil

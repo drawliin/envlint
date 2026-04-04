@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"env-doctor/internal/audit"
-	"env-doctor/internal/report"
+	"github.com/drawliin/envlint/internal/audit"
+	"github.com/drawliin/envlint/internal/report"
 
 	"github.com/spf13/cobra"
 )
@@ -19,9 +19,9 @@ func (e ExitError) Error() string {
 
 var opts options
 var rootCmd = &cobra.Command{
-	Use:   "env-doctor",
+	Use:   "envlint",
 	Short: "Audit .env files against your codebase",
-	Long:  "env-doctor audits environment variable usage, documentation drift, duplicate keys, and basic secret hygiene.",
+	Long:  "envlint audits environment variable usage, documentation drift, duplicate keys, and basic secret hygiene.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		renderOpts := report.Options{
 			JSON:           opts.json,

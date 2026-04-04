@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"env-doctor/internal/audit"
+	"github.com/drawliin/envlint/internal/audit"
 )
 
 const (

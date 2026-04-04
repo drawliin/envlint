@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"env-doctor/internal/parser"
-	"env-doctor/internal/scanner"
+	"github.com/drawliin/envlint/internal/parser"
+	"github.com/drawliin/envlint/internal/scanner"
 )
 
 func Run(root string, opts Options) (*Result, error) {
