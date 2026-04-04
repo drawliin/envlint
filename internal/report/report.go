@@ -33,18 +33,24 @@ func writeJSON(w io.Writer, result *audit.Result) error {
 
 func writeTerminal(w io.Writer, result *audit.Result, opts Options) error {
 	if result.IssueCount == 0 {
-		_, err := fmt.Fprintf(w, "%s✅ No issues found%s\n", colorGreen, colorReset)
+		_, err := fmt.Fprintf(w, "%s✅  No issues found%s\n", colorGreen, colorReset)
 		return err
 	}
 
-	writeCategory(w, colorRed, "❌ Missing vars", result.MissingVars)
-	writeCategory(w, colorYellow, "⚠️ Unused vars", result.UnusedVars)
-	writeCategory(w, colorRed, fmt.Sprintf("❌ %s missing from %s", opts.ExampleEnvFile, opts.EnvFile), result.ExampleEnvMissingFromEnv)
-	writeCategory(w, colorYellow, fmt.Sprintf("⚠️ %s missing from %s", opts.EnvFile, opts.ExampleEnvFile), result.UndocumentedInExampleEnv)
-	writeCategory(w, colorYellow, "⚠️ Secret leak detection", result.GitignoreWarnings)
+	if !result.EnvFile.Exists {
+		fmt.Printf("%s⚠️  .env file missing\n", colorYellow)
+	}
+	if !result.ExampleEnvFile.Exists {
+		fmt.Printf("%s⚠️  env example file missing\n", colorYellow)
+	}
+	writeCategory(w, colorRed, "❌  Missing vars", result.MissingVars)
+	writeCategory(w, colorYellow, "⚠️  Unused vars", result.UnusedVars)
+	writeCategory(w, colorRed, fmt.Sprintf("❌  %s missing from %s", opts.ExampleEnvFile, opts.EnvFile), result.ExampleEnvMissingFromEnv)
+	writeCategory(w, colorYellow, fmt.Sprintf("⚠️  %s missing from %s", opts.EnvFile, opts.ExampleEnvFile), result.UndocumentedInExampleEnv)
+	writeCategory(w, colorYellow, "⚠️  Secret leak detection", result.GitignoreWarnings)
 
 	if len(result.DuplicateKeys) > 0 {
-		fmt.Fprintf(w, "%s❌ Duplicate keys%s\n", colorRed, colorReset)
+		fmt.Fprintf(w, "%s❌  Duplicate keys%s\n", colorRed, colorReset)
 		paths := make([]string, 0, len(result.DuplicateKeys))
 		for path := range result.DuplicateKeys {
 			paths = append(paths, path)

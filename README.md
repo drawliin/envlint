@@ -12,21 +12,17 @@
 go install github.com/drawliin/envlint@latest
 ```
 
-```bash
-brew install envlint # placeholder
-```
-
 ## Usage
 
-```bash
-envlint
-envlint --path ./app
-envlint --env .env.local
-envlint --example-env .env.example
-envlint --fix
-envlint --json
-envlint --strict
-```
+| Command | What it does |
+| --- | --- |
+| `envlint` | Audit the current directory using `.env` and `.env.example`. |
+| `envlint --path ./app` | Audit a specific project directory instead of the current one. |
+| `envlint --env .env.local` | Use a different env file as the source of actual values. |
+| `envlint --example-env example.env` | Use a different example env filename for comparison. |
+| `envlint --fix` | Add keys found in the env file but missing from the example env file, writing them as empty values. |
+| `envlint --json` | Output the audit result as JSON instead of terminal-friendly text. |
+| `envlint --strict` | Exit with a non-zero status when issues are found. |
 
 ### Sample output
 
