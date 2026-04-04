@@ -1,12 +1,18 @@
 package main
 
 import (
-	"env-doctor/cmd"
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/drawliin/envlint/cmd"
 )
 
 func main() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Println("cwd: ", cwd)
+	}
 	if err := cmd.Execute(); err != nil {
 		var exitErr cmd.ExitError
 		if ok := AsExitError(err, &exitErr); ok {
