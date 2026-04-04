@@ -11,7 +11,7 @@ import (
 func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Println("cwd: ", cwd)
+		log.Println("current directory: ", cwd)
 	}
 	if err := cmd.Execute(); err != nil {
 		var exitErr cmd.ExitError
