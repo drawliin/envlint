@@ -2,6 +2,7 @@ package audit
 
 import "github.com/drawliin/envlint/internal/parser"
 
+// Result is the full audit summary that gets printed or returned as JSON.
 type Result struct {
 	Root                     string              `json:"root"`
 	EnvFile                  parser.File         `json:"env_file"`
@@ -20,6 +21,7 @@ type Result struct {
 	NonBlockingIssueCount    int                 `json:"non_blocking_issue_count"`
 }
 
+// Options lets the caller choose which env files should be compared.
 type Options struct {
 	EnvFile        string
 	ExampleEnvFile string

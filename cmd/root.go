@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Error lets ExitError satisfy the error interface while still keeping the exit code around.
 func (e ExitError) Error() string {
 	if e.Message == "" {
 		return fmt.Sprintf("exit status %d", e.Code)
@@ -59,6 +60,7 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 }
 
+// init wires up all CLI flags once when the package is loaded.
 func init() {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -73,6 +75,7 @@ func init() {
 	rootCmd.Flags().StringVar(&opts.exampleEnvFile, "example-env", ".env.example", "example env file name")
 }
 
+// Execute is the entry point used by main to start the Cobra command tree.
 func Execute() error {
 	return rootCmd.Execute()
 }

@@ -18,6 +18,7 @@ const (
 	colorReset  = "\033[0m"
 )
 
+// Write picks the output format, writes the report, and returns the exit code the CLI should use.
 func Write(w io.Writer, result *audit.Result, opts Options) (int, error) {
 	if opts.JSON {
 		return jsonExitCode(result, opts.Strict), writeJSON(w, result)
@@ -25,12 +26,14 @@ func Write(w io.Writer, result *audit.Result, opts Options) (int, error) {
 	return terminalExitCode(result, opts.Strict), writeTerminal(w, result, opts)
 }
 
+// writeJSON prints the audit result in a machine-friendly format.
 func writeJSON(w io.Writer, result *audit.Result) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(result)
 }
 
+// writeTerminal renders the same result in sections that are easier to read in a terminal.
 func writeTerminal(w io.Writer, result *audit.Result, opts Options) error {
 	if result.IssueCount == 0 {
 		_, err := fmt.Fprintf(w, "%s✅  No issues found%s\n", colorGreen, colorReset)
@@ -80,6 +83,7 @@ func writeTerminal(w io.Writer, result *audit.Result, opts Options) error {
 	return err
 }
 
+// writeCategory prints one report section only when there is something to show.
 func writeCategory(w io.Writer, color, title string, items []string) {
 	if len(items) == 0 {
 		return
@@ -92,6 +96,7 @@ func writeCategory(w io.Writer, color, title string, items []string) {
 	fmt.Fprintln(w)
 }
 
+// terminalExitCode decides whether the CLI should fail in strict mode.
 func terminalExitCode(result *audit.Result, strict bool) int {
 	if strict && result.IssueCount > 0 {
 		return 1
@@ -99,6 +104,7 @@ func terminalExitCode(result *audit.Result, strict bool) int {
 	return 0
 }
 
+// jsonExitCode currently follows the same rule as the terminal output.
 func jsonExitCode(result *audit.Result, strict bool) int {
 	return terminalExitCode(result, strict)
 }

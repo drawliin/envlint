@@ -1,5 +1,6 @@
 package scanner
 
+// excludedDirectories skips folders that are usually dependencies, caches, or generated output.
 var excludedDirectories = map[string]bool{
 	".git":          true,
 	".hg":           true,

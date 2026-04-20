@@ -7,6 +7,7 @@ import (
 	"github.com/drawliin/envlint/cmd"
 )
 
+// main runs the CLI and makes sure exit codes are returned in a predictable way.
 func main() {
 	if err := cmd.Execute(); err != nil {
 		var exitErr cmd.ExitError
@@ -21,6 +22,7 @@ func main() {
 	}
 }
 
+// AsExitError is a small helper so main can check whether the error carries a custom exit code.
 func AsExitError(err error, target *cmd.ExitError) bool {
 	exitErr, ok := err.(cmd.ExitError)
 	if !ok {

@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// These regex patterns cover the common env access styles we support right now.
 var patterns = []pattern{
 	{expression: regexp.MustCompile(`os\.Getenv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
 	{expression: regexp.MustCompile(`os\.LookupEnv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
@@ -19,6 +20,7 @@ var patterns = []pattern{
 	{expression: regexp.MustCompile(`getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
 }
 
+// Scan walks through the project, reads supported source files, and collects env vars used in code.
 func Scan(root string) (Result, error) {
 	result := Result{
 		Referenced: map[string][]string{},
@@ -50,6 +52,7 @@ func Scan(root string) (Result, error) {
 		text := string(content)
 		seenInFile := map[string]bool{}
 
+		// We only keep one entry per key per file so the report stays clean.
 		for _, p := range patterns {
 			matches := p.expression.FindAllStringSubmatch(text, -1)
 			for _, match := range matches {

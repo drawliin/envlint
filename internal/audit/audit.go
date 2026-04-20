@@ -11,6 +11,7 @@ import (
 	"github.com/drawliin/envlint/internal/scanner"
 )
 
+// Run ties everything together: parse env files, scan the codebase, and build the final audit result.
 func Run(root string, opts Options) (*Result, error) {
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
@@ -65,6 +66,7 @@ func Run(root string, opts Options) (*Result, error) {
 	return result, nil
 }
 
+// ApplyFixes appends missing keys to the example env file so the docs stay in sync with the real env file.
 func ApplyFixes(result *Result) error {
 	if len(result.UndocumentedInExampleEnv) == 0 {
 		return nil
@@ -112,6 +114,7 @@ func ApplyFixes(result *Result) error {
 	return nil
 }
 
+// diffKeys returns the keys that exist in the first list but not in the comparison map.
 func diffKeys[T any](keys []string, compare map[string]T) []string {
 	var missing []string
 	for _, key := range keys {
@@ -123,6 +126,7 @@ func diffKeys[T any](keys []string, compare map[string]T) []string {
 	return missing
 }
 
+// keysOf turns a map into a sorted slice so later comparisons are easier to work with.
 func keysOf[K ~string, V any](values map[K]V) []string {
 	keys := make([]string, 0, len(values))
 	for key := range values {
@@ -132,6 +136,7 @@ func keysOf[K ~string, V any](values map[K]V) []string {
 	return keys
 }
 
+// duplicateCount adds up how many duplicate keys were found across all tracked files.
 func duplicateCount(duplicates map[string][]string) int {
 	total := 0
 	for _, keys := range duplicates {
@@ -140,6 +145,7 @@ func duplicateCount(duplicates map[string][]string) int {
 	return total
 }
 
+// gitignoreWarning checks whether the env file is protected by a gitignore rule.
 func gitignoreWarning(root string, envExists bool) string {
 	if !envExists {
 		return ""

@@ -14,6 +14,7 @@ import (
 
 var envLinePattern = regexp.MustCompile(`^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=`)
 
+// ParseEnvFile reads an env file and keeps both the parsed values and some extra metadata like duplicate keys.
 func ParseEnvFile(path string) (File, error) {
 	file := File{
 		Path:   path,
@@ -79,6 +80,7 @@ func ParseEnvFile(path string) (File, error) {
 	return file, nil
 }
 
+// EnvPaths builds the full paths for the main env file and the example env file from the chosen root.
 func EnvPaths(root, envFile, exampleEnvFile string) (string, string) {
 	return filepath.Join(root, envFile), filepath.Join(root, exampleEnvFile)
 }
