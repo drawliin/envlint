@@ -1,5 +1,5 @@
 # envlint
-[![BU6IXwu.md.jpg](https://iili.io/BU6IXwu.md.jpg)](https://freeimage.host/i/BU6IXwu)
+<img src="https://iili.io/BU6IXwu.jpg" width="100%" height="100%"/>
 
 [![CI](https://img.shields.io/badge/ci-pending-lightgrey)](#)
 [![Go Version](https://img.shields.io/badge/go-1.24+-blue)](#)
