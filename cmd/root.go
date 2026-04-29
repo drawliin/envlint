@@ -75,7 +75,6 @@ func init() {
 	rootCmd.Flags().StringVar(&opts.exampleEnvFile, "example-env", ".env.example", "example env file name")
 }
 
-// Execute is the entry point used by main to start the Cobra command tree.
 func Execute() error {
-	return rootCmd.Execute()
+	return rootCmd.Execute() // this executes the runE func
 }

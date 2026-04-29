@@ -11,13 +11,18 @@ import (
 
 // These regex patterns cover the common env access styles we support right now.
 var patterns = []pattern{
+	// Go: os.Getenv("API_KEY")
 	{expression: regexp.MustCompile(`os\.Getenv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
+	// Go: os.LookupEnv("API_KEY")
 	{expression: regexp.MustCompile(`os\.LookupEnv\(\s*"([A-Z0-9_]+)"\s*\)`), group: 1},
+	// JavaScript/TypeScript: process.env.API_KEY
 	{expression: regexp.MustCompile(`process\.env\.([A-Z0-9_]+)`), group: 1},
+	// JavaScript/TypeScript: process.env["API_KEY"] or process.env['API_KEY']
 	{expression: regexp.MustCompile(`process\.env\[\s*["']([A-Z0-9_]+)["']\s*\]`), group: 1},
+	// Python: os.environ["API_KEY"], os.environ.get("API_KEY"), or environ.get("API_KEY")
 	{expression: regexp.MustCompile(`(?:os\.environ(?:\.get)?|environ\.get)\(\s*["']([A-Z0-9_]+)["']`), group: 1},
+	// Python: os.getenv("API_KEY")
 	{expression: regexp.MustCompile(`os\.getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
-	{expression: regexp.MustCompile(`getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
 }
 
 // Scan walks through the project, reads supported source files, and collects env vars used in code.
