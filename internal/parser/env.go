@@ -49,6 +49,7 @@ func ParseEnvFile(path string) (File, error) {
 	seen := map[string]bool{}
 	duplicateSet := map[string]bool{}
 	scanner := bufio.NewScanner(raw)
+	// check duplicates
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {

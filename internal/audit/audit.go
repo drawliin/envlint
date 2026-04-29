@@ -55,7 +55,7 @@ func Run(root string, opts Options) (*Result, error) {
 		result.DuplicateKeys[exampleEnvFile.Path] = append([]string(nil), exampleEnvFile.Duplicates...)
 	}
 
-	if warning := gitignoreWarning(absRoot, envFile.Exists); warning != "" {
+	if warning := gitignoreWarning(absRoot, opts.EnvFile, envFile.Exists); warning != "" {
 		result.GitignoreWarnings = append(result.GitignoreWarnings, warning)
 	}
 
@@ -127,7 +127,7 @@ func diffKeys[T any](keys []string, compare map[string]T) []string {
 }
 
 // keysOf turns a map into a sorted slice so later comparisons are easier to work with.
-func keysOf[K ~string, V any](values map[K]V) []string {
+func keysOf[K string, V any](values map[K]V) []string {
 	keys := make([]string, 0, len(values))
 	for key := range values {
 		keys = append(keys, string(key))
@@ -145,8 +145,8 @@ func duplicateCount(duplicates map[string][]string) int {
 	return total
 }
 
-// gitignoreWarning checks whether the env file is protected by a gitignore rule.
-func gitignoreWarning(root string, envExists bool) string {
+// gitignoreWarning checks whether the configured env file is protected by a gitignore rule.
+func gitignoreWarning(root, envFile string, envExists bool) string {
 	if !envExists {
 		return ""
 	}
@@ -155,21 +155,22 @@ func gitignoreWarning(root string, envExists bool) string {
 	content, err := os.ReadFile(gitignorePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return ".env exists but no .gitignore file was found"
+			return fmt.Sprintf("%s exists but no .gitignore file was found", envFile)
 		}
 		return fmt.Sprintf("unable to read %s: %v", gitignorePath, err)
 	}
 
+	envRule := strings.TrimPrefix(filepath.ToSlash(envFile), "./")
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
-		if trimmed == ".env" || trimmed == "/.env" || trimmed == "*.env" || trimmed == ".env*" {
+		if trimmed == envRule || trimmed == "/"+envRule || trimmed == "*.env" || trimmed == ".env*" {
 			return ""
 		}
 	}
 
-	return ".env is not ignored by .gitignore"
+	return fmt.Sprintf("%s is not ignored by .gitignore", envFile)
 }
