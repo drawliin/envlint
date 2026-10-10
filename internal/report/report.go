@@ -41,10 +41,10 @@ func writeTerminal(w io.Writer, result *audit.Result, opts Options) error {
 	}
 
 	if !result.EnvFile.Exists {
-		fmt.Printf("%s⚠️  .env file missing\n", colorYellow)
+		fmt.Fprintf(w, "%s⚠️  .env file missing%s\n", colorYellow, colorReset)
 	}
 	if !result.ExampleEnvFile.Exists {
-		fmt.Printf("%s⚠️  env example file missing\n", colorYellow)
+		fmt.Fprintf(w, "%s⚠️  env example file missing%s\n", colorYellow, colorReset)
 	}
 	writeCategory(w, colorRed, "❌  Missing vars", result.MissingVars)
 	writeCategory(w, colorYellow, "⚠️  Unused vars", result.UnusedVars)

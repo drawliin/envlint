@@ -21,6 +21,8 @@ var patterns = []pattern{
 	{expression: regexp.MustCompile(`process\.env\[\s*["']([A-Z0-9_]+)["']\s*\]`), group: 1},
 	// Python: os.environ["API_KEY"], os.environ.get("API_KEY"), or environ.get("API_KEY")
 	{expression: regexp.MustCompile(`(?:os\.environ(?:\.get)?|environ\.get)\(\s*["']([A-Z0-9_]+)["']`), group: 1},
+	// Python: os.environ["API_KEY"] and os.environ['API_KEY']
+	{expression: regexp.MustCompile(`os\.environ\[\s*["']([A-Z0-9_]+)["']\s*\]`), group: 1},
 	// Python: os.getenv("API_KEY")
 	{expression: regexp.MustCompile(`os\.getenv\(\s*["']([A-Z0-9_]+)["']\s*\)`), group: 1},
 }
